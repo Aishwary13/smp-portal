@@ -1,6 +1,9 @@
 import React from 'react'
 import { useState } from 'react';
 import TakeMeetingDetails from './TakeMeetingDetails';
+import Attendance from './Attendance';
+import ViewAttendance from './ViewAttendance';
+import departmentOptions from "../../../../data/departmentOptions.json";
 
 export default function SinlgeMeeting({ meet, ondelete, editMeeting, userDetails, isPreviousMeeting}) {
   const handleButtonClick = (e) => {
@@ -15,10 +18,16 @@ export default function SinlgeMeeting({ meet, ondelete, editMeeting, userDetails
 
   const [editedMeeting, setEditedMeeting] = useState(meet);
 
+  const [showAttendance, setshowAttendance] = useState(false);
+
+  const [viewAttendance, setviewAttendance] = useState(false);
+
+
   const handleEditClick = () => {
     // Add your edit functionality here
     setIsEditing(true);
     console.log("Edit clicked for meeting ID:", meet.meetingId);
+    console.log(editedMeeting)
   };
 
   const handleEditSave = () => {
@@ -58,21 +67,83 @@ export default function SinlgeMeeting({ meet, ondelete, editMeeting, userDetails
     });
   };
 
-  const handleattendee = (e) => {
+  const handleattendees = (e) => {
     const value = e.target.value;
     const isChecked = e.target.checked;
 
     setEditedMeeting((prevDetails) => {
-      const updatedattendee = isChecked
-        ? [...prevDetails.attendee, value]
-        : prevDetails.attendee.filter((attendee) => attendee !== value);
-
-      return {
-        ...prevDetails,
-        attendee: updatedattendee,
-      };
+      if (isChecked) {
+        return {
+          ...prevDetails,
+          attendee: [...prevDetails.attendee, value],
+        };
+      } else {
+        return {
+          ...prevDetails,
+          attendee: prevDetails.attendee.filter(
+            (attendee) => attendee !== value
+          ),
+        };
+      }
     });
   };
+
+  const handleBranch = (e,val) => {
+    const value = e.target.value;
+    const isChecked = e.target.checked;
+
+    setEditedMeeting((prevDetails) => {
+      if (isChecked) {
+        return val === "Mentor" ? {
+          ...prevDetails,
+          mentorBranches: [...prevDetails.mentorBranches, value],
+        } : {
+          ...prevDetails,
+          menteeBranches: [...prevDetails.menteeBranches, value],
+        }
+      } else {
+        return val === "Mentor" ? {
+          ...prevDetails,
+          mentorBranches: prevDetails.mentorBranches.filter(
+            (mentorBranches) => mentorBranches !== value
+          )
+        } : {
+          ...prevDetails,
+          menteeBranches: prevDetails.menteeBranches.filter(
+            (menteeBranches) => menteeBranches !== value
+          )
+        }
+      }
+    });
+  }
+
+  const handleAllBranchesChange = (e,val) => {
+    const isChecked = e.target.checked;
+    const allBranches = Object.keys(departmentOptions);
+  
+    setEditedMeeting((prevDetails) => {
+      if (isChecked) {
+        // If "All Branches" is checked, set mentorBranches to all branch keys
+        return val === "Mentor" ? {
+          ...prevDetails,
+          mentorBranches: allBranches,
+        } : {
+          ...prevDetails,
+          menteeBranches: allBranches,
+        }
+      } else {
+        // Set mentorBranches to an empty array if no individual branch is selected
+        return val === "Mentor" ? {
+          ...prevDetails,
+          mentorBranches: [],
+        } : {
+          ...prevDetails,
+          menteeBranches: [],
+        }
+      }
+    });
+  };
+
 
   const handleDescription = (e) => {
     setEditedMeeting({
@@ -90,6 +161,26 @@ export default function SinlgeMeeting({ meet, ondelete, editMeeting, userDetails
     setconfirmdelete(false);
   };
 
+  const handleShowAttendance = () => {
+    setshowAttendance(true)
+  }
+
+  const handleCloseAttendance= () => {
+    setshowAttendance(false)
+  }
+
+  const handleSaveAttendance = () => {
+    setshowAttendance(false)
+  }
+
+  const handleViewAttendance = () => {
+    setviewAttendance(true)
+  }
+
+  const handleCloseViewAttendance= () => {
+    setviewAttendance(false)
+  }
+
   return (
     <div className="mb-2" style={{ width: "100%" }}>
       <div className="accordion" id="accordionExample">
@@ -106,6 +197,7 @@ export default function SinlgeMeeting({ meet, ondelete, editMeeting, userDetails
             >
               {meet.title} - Date: {meet.date}, Time: {meet.time}
             </button>
+            {/* <button> hello </button> */}
           </h2>
           <div
             id={meetingId}
@@ -129,6 +221,41 @@ export default function SinlgeMeeting({ meet, ondelete, editMeeting, userDetails
                 ) : (
                   <li>{meet.attendee}</li>
                 )}
+                {meet.attendee.includes("Mentors") && (
+                  <>Mentor Branches:</>
+                )}
+                <br />
+                <p>
+                  {Array.isArray(meet.mentorBranches) ? (
+                    meet.mentorBranches.map((branch, index) => (
+                      // <li key={index}>{departmentOptions[branch]}</li>
+                      <span key={index}>
+                        {departmentOptions[branch]}
+                        {index < meet.mentorBranches.length - 1 && ', '}
+                      </span>
+                    ))
+                  ) : (
+                    // <li>{meet.mentorBranches}</li>
+                    <span>{meet.mentorBranches}</span>
+                  )}
+                </p>
+                {meet.attendee.includes("Mentees") && (
+                  <>Mentee Branches:</>
+                )}
+                <p>
+                  {Array.isArray(meet.menteeBranches) ? (
+                    meet.menteeBranches.map((branch, index) => (
+                      // <li key={index}>{departmentOptions[branch]}</li>
+                      <span key={index}>
+                        {departmentOptions[branch]}
+                        {index < meet.menteeBranches.length - 1 && ', '}
+                      </span>
+                    ))
+                  ) : (
+                    // <li>{meet.mentorBranches}</li>
+                    <span>{meet.menteeBranches}</span>
+                  )}
+                </p>
               </p>
 
               <p>
@@ -154,6 +281,20 @@ export default function SinlgeMeeting({ meet, ondelete, editMeeting, userDetails
                     Edit
                   </button>
                 )}
+                  <button
+                    className="btn btn-primary mx-2"
+                    onClick={handleShowAttendance}
+                  >
+                    Take Attendance
+                  </button>
+                  
+                  <button
+                    className="btn btn-primary mx-2"
+                    onClick={handleViewAttendance}
+                  >
+                    View Attendance
+                  </button>
+
               </div>
 
             </div>
@@ -166,11 +307,31 @@ export default function SinlgeMeeting({ meet, ondelete, editMeeting, userDetails
               handleSave={handleEditSave}
               handledate={handledate}
               handletime={handletime}
-              userDetails={userDetails}
               handletitle={handletitle}
-              handleattendee={handleattendee}
+              handleattendees={handleattendees}
               handleDescription={handleDescription}
+              handleBranch={handleBranch}
+              handleAllBranchesChange={handleAllBranchesChange}
             />
+          )}
+
+          {showAttendance && (
+
+            <Attendance
+              handleClose={handleCloseAttendance}
+              handleButtonSave = {handleSaveAttendance}
+              meetingId = {meet.meetingId}
+            />
+
+          )}
+
+          {viewAttendance && (
+
+          <ViewAttendance
+            handleClose={handleCloseViewAttendance}
+            meetingId = {meet.meetingId}
+          />
+
           )}
 
           {confirmdelete && (

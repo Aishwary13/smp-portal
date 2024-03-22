@@ -1,8 +1,11 @@
 import React from 'react'
 import { useState } from 'react';
 import TakeMeetingDetails from './TakeMeetingDetails';
+import Attendance from './Attendance';
+import ViewAttendance from './ViewAttendance';
+import departmentOptions from "../../../../data/departmentOptions.json"
 
-export default function SinlgeMeeting({meet, ondelete, editMeeting,  userDetails, isPreviousMeeting}) {
+export default function SinlgeMeeting({meet, ondelete, editMeeting,  userDetails, isPreviousMeeting,mentees}) {
   const handleButtonClick = (e) => {
     e.stopPropagation();
   };
@@ -12,6 +15,9 @@ export default function SinlgeMeeting({meet, ondelete, editMeeting,  userDetails
   const [isEditing, setIsEditing] = useState(false);
   const [confirmdelete, setconfirmdelete] = useState(false);
   const [editedMeeting, setEditedMeeting] = useState(meet);
+  const [showAttendance, setshowAttendance] = useState(false);
+  const [viewAttendance, setviewAttendance] = useState(false);
+
 
   const handleEditClick = () => {
     // Add your edit functionality here
@@ -89,6 +95,50 @@ export default function SinlgeMeeting({meet, ondelete, editMeeting,  userDetails
     
   // };
 
+  const handleShowAttendance = () => {
+    console.log(meet)
+    setshowAttendance(true)
+  }
+
+  const handleCloseAttendance= () => {
+    setshowAttendance(false)
+  }
+
+  const handleSaveAttendance = () => {
+    setshowAttendance(false)
+  }
+
+  const handleViewAttendance = () => {
+    setviewAttendance(true)
+  }
+
+  const handleCloseViewAttendance= () => {
+    setviewAttendance(false)
+  }
+
+  const handleMentee = (e) => {
+    let value = e.target.value
+    let isChecked = e.target.checked
+    
+    setEditedMeeting((prevDetails) => {
+        if(isChecked){
+            return {
+                ...editedMeeting,
+                menteeList : [...prevDetails.menteeList, value]
+            }
+        }
+        else{
+            return{
+                ...editedMeeting,
+                menteeList : prevDetails.menteeList.filter(
+                    (mentee) => mentee !== value
+                )
+            }
+        }
+    })
+
+}
+
   return (
     <div className='mb-2'>
       <div className="accordion" id="accordionExample">
@@ -114,6 +164,52 @@ export default function SinlgeMeeting({meet, ondelete, editMeeting,  userDetails
                 ) : (
                   <li>{meet.attendee}</li>
                 )}
+                {meet.attendee.includes("Mentors") && (
+                  <>Mentor Branches:</>
+                )}
+                <br />
+                
+                {Array.isArray(meet.mentorBranches) && (
+                  meet.mentorBranches.map((branch, index) => (
+                    // <li key={index}>{departmentOptions[branch]}</li>
+                    <span key={index}>
+                      {departmentOptions[branch]}
+                      {index < meet.mentorBranches.length - 1 && ', '}
+                    </span>
+                  ))
+                )}
+
+                {(meet.attendee.includes("Mentees") && meet.menteeList.length ===0) ? (
+                  <><br/><br/>Mentee Branches:</>
+                ) : meet.menteeList.length !==0 && (
+                  <>Name of the Mentees:</>
+                )}
+                
+                <p>
+                  {Array.isArray(meet.menteeBranches) ? (
+                    meet.menteeBranches.map((branch, index) => (
+                      // <li key={index}>{departmentOptions[branch]}</li>
+                      <span key={index}>
+                        {departmentOptions[branch]}
+                        {index < meet.menteeBranches.length - 1 && ', '}
+                      </span>
+                    ))
+                  ) : (
+                    <span>{meet.menteeBranches}</span>
+                  )}
+                  {Array.isArray(meet.menteeList) ? (
+                    mentees
+                      .filter((mentee, index) => meet.menteeList.includes(mentee[0]))
+                      .map((mentee, index) => (
+                        <span key={index}>
+                          {mentee[1]}
+                          {index < meet.menteeList.length - 1 && ', '}
+                        </span>
+                      ))
+                  ) : (
+                    <span>{meet.menteeList}</span>
+                  )}
+                </p>
               </p>
               <p>Description:<br/>{meet.description}</p> 
               <div className='mt-2'>
@@ -123,6 +219,24 @@ export default function SinlgeMeeting({meet, ondelete, editMeeting,  userDetails
                 {!isPreviousMeeting && (userDetails.id === meet.schedulerId) && (
                   <button className="btn btn-primary mx-2" onClick={handleEditClick}>Edit</button>
                 )}
+                {(meet.schedulerId === userDetails.id) && (
+                <button
+                    className="btn btn-primary mx-2"
+                    onClick={handleShowAttendance}
+                  >
+                    Take Attendance
+                </button>
+                )}
+
+                {(meet.schedulerId === userDetails.id) && (
+                <button
+                    className="btn btn-primary mx-2"
+                    onClick={handleViewAttendance}
+                  >
+                    View Attendance
+                </button>
+                )}
+
               </div>
             </div>
           </div>
@@ -138,9 +252,30 @@ export default function SinlgeMeeting({meet, ondelete, editMeeting,  userDetails
               handletitle={handletitle}
               handleDescription={handleDescription}
               userDetails = {userDetails}
+              handleMentee = {handleMentee}
+              mentees = {mentees}
             />
 
           }
+
+          {showAttendance && (
+
+          <Attendance
+            handleClose={handleCloseAttendance}
+            handleButtonSave = {handleSaveAttendance}
+            meetingId = {meet.meetingId}
+          />
+
+          )}
+
+          {viewAttendance && (
+
+          <ViewAttendance
+            handleClose={handleCloseViewAttendance}
+            meetingId = {meet.meetingId}
+          />
+
+          )}
 
           {confirmdelete &&
 

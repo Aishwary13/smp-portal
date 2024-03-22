@@ -2,13 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage";
-// import DashboardPage from "./pages/DashboardPage";
-import MenteeDashboard from "./components/dashboard/mentee/MenteeDashboard";
-import MentorDashboard from "./components/dashboard/mentor/MentorDashboard";
-import AdminDashboard from "./components/dashboard/admin/AdminDashboard";
-import AdminMeetingList from "./components/dashboard/admin/meetings/AdminMeetingList";
-import MentorMeetingList from "./components/dashboard/mentor/meetings/MentorMeetingList";
-import MenteeMeetingList from "./components/dashboard/mentee/meetings/MenteeMeetingList";
+import Dashboard from "./components/dashboard/Dashboard";
 import MenteesList from "./components/dashboard/admin/mentees/MenteesList";
 import MentorsList from "./components/dashboard/admin/mentors/MentorsList";
 import FormList from "./components/dashboard/admin/forms/FormList";
@@ -16,8 +10,8 @@ import MenteeForm from "./components/dashboard/mentee/forms/MenteeForm";
 import Login from "./components/Login";
 import RegistrationForm from "./components/dashboard/mentor/registration/RegistrationForm";
 import PrivateRoute from "./routes/PrivateRoute";
-// import MenteeProfile from "./components/dashboard/admin/mentees/MenteeProfile";
-// import MentorProfile from "./components/dashboard/admin/mentors/MentorProfile";
+import FormResponses from "./components/dashboard/admin/forms/FormResponses";
+import MeetingList from "./components/dashboard/Meetings/MeetingList";
 
 function App() {
   return (
@@ -27,7 +21,6 @@ function App() {
           <Routes>
             <Route path="/login" Component={LoginPage} />
             <Route path="/google-login" element={<Login />} />
-            {/* <Route path="/dashboard/*" element={DashboardPage} /> */}
             {/*------------------- Mentor BELOW--------------------------------*/}
             <Route
               path="/dashboard/mentor/profile"
@@ -37,19 +30,19 @@ function App() {
                   allowedRole={"mentor"}
                   requiredStatus={5}
                 >
-                  <MentorDashboard/>
+                  <Dashboard />
                 </PrivateRoute>
               }
             />
             <Route
-              path="/dashboard/mentor/meetings"
+              path="/dashboard/mentor/Meetings"
               element={
                 <PrivateRoute
-                  path="/dashboard/mentor/meetings"
+                  path="/dashboard/mentor/Meetings"
                   allowedRole={"mentor"}
                   requiredStatus={5}
                 >
-                  <MentorMeetingList/>
+                  <MeetingList />
                 </PrivateRoute>
               }
             />
@@ -57,7 +50,7 @@ function App() {
               path="/registration"
               element={
                 <PrivateRoute path="/registration" allowedRole={"mentor"}>
-                  <RegistrationForm/>
+                  <RegistrationForm />
                 </PrivateRoute>
               }
             />
@@ -69,18 +62,18 @@ function App() {
                   path="/dashboard/mentee/profile"
                   allowedRole={"mentee"}
                 >
-                  <MenteeDashboard/>
+                  <Dashboard />
                 </PrivateRoute>
               }
             />
             <Route
-              path="/dashboard/mentee/meetings"
+              path="/dashboard/mentee/Meetings"
               element={
                 <PrivateRoute
-                  path="/dashboard/mentee/meetings"
+                  path="/dashboard/mentee/Meetings"
                   allowedRole={"mentee"}
                 >
-                  <MenteeMeetingList/>
+                  <MeetingList />
                 </PrivateRoute>
               }
             />
@@ -91,7 +84,7 @@ function App() {
                   path="/dashboard/mentee/form"
                   allowedRole={"mentee"}
                 >
-                  <MenteeForm/>
+                  <MenteeForm />
                 </PrivateRoute>
               }
             />
@@ -103,18 +96,18 @@ function App() {
                   path="/dashboard/admin/profile"
                   allowedRole={"admin"}
                 >
-                  <AdminDashboard />
+                  <Dashboard />
                 </PrivateRoute>
               }
             />
             <Route
-              path="/dashboard/admin/meetings"
+              path="/dashboard/admin/Meetings"
               element={
                 <PrivateRoute
-                  path="/dashboard/admin/meetings"
+                  path="/dashboard/admin/Meetings"
                   allowedRole={"admin"}
                 >
-                  <AdminMeetingList/>
+                  <MeetingList />
                 </PrivateRoute>
               }
             />
@@ -125,7 +118,7 @@ function App() {
                   path="/dashboard/admin/mentors"
                   allowedRole={"admin"}
                 >
-                  <MentorsList/>
+                  <MentorsList />
                 </PrivateRoute>
               }
             />
@@ -136,7 +129,7 @@ function App() {
                   path="/dashboard/admin/mentees"
                   allowedRole={"admin"}
                 >
-                  <MenteesList/>
+                  <MenteesList />
                 </PrivateRoute>
               }
             />
@@ -147,7 +140,18 @@ function App() {
                   path="/dashboard/admin/form"
                   allowedRole={"admin"}
                 >
-                  <FormList/>
+                  <FormList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/dashboard/admin/form-responses"
+              element={
+                <PrivateRoute
+                  path="/dashboard/admin/form-responses"
+                  allowedRole={"admin"}
+                >
+                  <FormResponses />
                 </PrivateRoute>
               }
             />

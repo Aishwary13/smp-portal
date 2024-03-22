@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 // import Formelement from './Formelement';
 import TakeMeetingDetails from './TakeMeetingDetails';
 import axios from 'axios'; // Import Axios
+import departmentOptions from "../../../../data/departmentOptions.json";
 
 const ScheduleMeetingButton = ({userDetails,fetchMeetings }) => {
   const [showModal, setShowModal] = useState(false);
@@ -13,6 +14,9 @@ const ScheduleMeetingButton = ({userDetails,fetchMeetings }) => {
     title: "",
     description: "",
     attendee: [],
+    mentorBranches : [],
+    menteeBranches  : [],
+    menteeList : []
   });
 
   const handleScheduleClick = () => {
@@ -24,6 +28,9 @@ const ScheduleMeetingButton = ({userDetails,fetchMeetings }) => {
       title: "",
       description: "",
       attendee: [],
+      mentorBranches : [],
+      menteeBranches : [],
+      menteeList : []
     });
     setShowModal(true);
   };
@@ -35,6 +42,10 @@ const ScheduleMeetingButton = ({userDetails,fetchMeetings }) => {
   const handleSaveModal = () => {
     const newMeeting = { ...currmeeting, id: Date.now() };
     setcurrmeeting(newMeeting); // Update the current meeting state
+
+    console.log("Here")
+    console.log(newMeeting)
+
     const meetingData = {
       title: newMeeting.title,
       schedulerId: newMeeting.schedulerId,
@@ -42,6 +53,9 @@ const ScheduleMeetingButton = ({userDetails,fetchMeetings }) => {
       time: newMeeting.time,
       attendee: newMeeting.attendee,
       description: newMeeting.description,
+      mentorBranches: newMeeting.mentorBranches,
+      menteeBranches: newMeeting.menteeBranches,
+      menteeList: newMeeting.menteeList
     };
 
     axios
@@ -109,6 +123,62 @@ const ScheduleMeetingButton = ({userDetails,fetchMeetings }) => {
     setcurrmeeting({ ...currmeeting, description: e.target.value });
   };
 
+  const handleBranch = (e,val) => {
+    const value = e.target.value;
+    const isChecked = e.target.checked;
+
+    setcurrmeeting((prevDetails) => {
+      if (isChecked) {
+        return val === "Mentor" ? {
+          ...prevDetails,
+          mentorBranches: [...prevDetails.mentorBranches, value],
+        } : {
+          ...prevDetails,
+          menteeBranches: [...prevDetails.menteeBranches, value],
+        }
+      } else {
+        return val === "Mentor" ? {
+          ...prevDetails,
+          mentorBranches: prevDetails.mentorBranches.filter(
+            (mentorBranches) => mentorBranches !== value
+          )
+        } : {
+          ...prevDetails,
+          menteeBranches: prevDetails.menteeBranches.filter(
+            (menteeBranches) => menteeBranches !== value
+          )
+        }
+      }
+    });
+  }
+
+  const handleAllBranchesChange = (e,val) => {
+    const isChecked = e.target.checked;
+    const allBranches = Object.keys(departmentOptions);
+  
+    setcurrmeeting((prevDetails) => {
+      if (isChecked) {
+        // If "All Branches" is checked, set mentorBranches to all branch keys
+        return val === "Mentor" ? {
+          ...prevDetails,
+          mentorBranches: allBranches,
+        } : {
+          ...prevDetails,
+          menteeBranches: allBranches,
+        }
+      } else {
+        // Set mentorBranches to an empty array if no individual branch is selected
+        return val === "Mentor" ? {
+          ...prevDetails,
+          mentorBranches: [],
+        } : {
+          ...prevDetails,
+          menteeBranches: [],
+        }
+      }
+    });
+  };
+
   return (
     <div>
       {/* <i class="bi bi-plus-circle"></i> */}
@@ -141,6 +211,8 @@ const ScheduleMeetingButton = ({userDetails,fetchMeetings }) => {
           handletime={handletime}
           handletitle={handletitle}
           handleDescription={handleDescription}
+          handleBranch={handleBranch}
+          handleAllBranchesChange={handleAllBranchesChange}
         />
       )}
     </div>

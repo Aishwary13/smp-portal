@@ -5,12 +5,17 @@ import deleteIcon from "../../../../images/delete_icon.png";
 import MenteeProfile from "./MenteeProfile";
 import MenteeUpload from "./MenteeUpload";
 import axios from "axios";
+import ChangeMentor from "./ChangeMentor";
+import departmentOptions from "../../../../data/departmentOptions.json";
+import { DownloadCSV } from "../DownloadCSV";
 
 const MenteesList = () => {
   // Dummy data (replace with actual data fetching)
   const { userDetails } = useAuth();
   const [mentees, setMentees] = useState([]);
-  const[isFirstTime,setisFirstTime] = useState(true);
+  const [isFirstTime, setisFirstTime] = useState(true);
+  const [totalEntries, setTotalEntries] = useState(0);
+  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState("");
 
   // Function to fetch Mentee list from Django endpoint
   const fetchMenteeList = async () => {
@@ -20,15 +25,17 @@ const MenteesList = () => {
 
       // Update the state with the fetched Mentee list
       setMentees(response.data);
-      console.log(mentees);
+      setTotalEntries(response.data.length);
     } catch (error) {
       console.error("Error fetching Mentee list:", error);
     }
   };
-
   // Call the function to fetch the Mentee list when the component loads
   useEffect(() => {
-    if(isFirstTime){setisFirstTime(false);fetchMenteeList();}
+    if (isFirstTime) {
+      setisFirstTime(false);
+      fetchMenteeList();
+    }
   }, [isFirstTime]);
   const [searchTerm, setSearchTerm] = useState("");
   const [menteeToDelete, setMenteeToDelete] = useState(null);
@@ -37,19 +44,6 @@ const MenteesList = () => {
 
   // State for controlling the "Add Mentee" pop-up
   const [addMenteeModalVisible, setAddMenteeModalVisible] = useState(false);
-  const departmentOptions = {
-    "B-CSB": "CSB (B.Tech.)",
-    "B-CSSS": "CSSS (B.Tech.)",
-    "B-CSD": "CSD (B.Tech.)",
-    "B-CSE": "CSE (B.Tech.)",
-    "B-CSAI": "CSAI (B.Tech.)",
-    "B-CSAM": "CSAM (B.Tech.)",
-    "B-ECE": "ECE (B.Tech.)",
-    "B-EVE": "EVE (B.Tech.)",
-    "M-CSE": "CSE (M.Tech.)",
-    "M-ECE": "ECE (M.Tech.)",
-    "M-CB": "CB (M.Tech.)",
-  };
   // State for mentee form fields
   const [menteeForm, setMenteeForm] = useState({
     name: "",
@@ -59,14 +53,8 @@ const MenteesList = () => {
     mentorName: "",
     mentorEmail: "",
     mentorId: "",
+    contact: "",
   });
-  // Define the fixed widths for the header columns
-  const headerColumnWidths = {
-    name: "30%",
-    id: "20%",
-    department: "30%",
-    actions: "20%",
-  };
 
   const headerColumns = [
     { label: "Name", key: "name" },
@@ -88,6 +76,50 @@ const MenteesList = () => {
     setMenteeToDelete(mentee);
   };
 
+  const [showChangeMentor, setshowChangeMentor] = useState(false);
+  const [editMentee, seteditMentee] = useState(null);
+  const [currMentee, setcurrMentee] = useState(null);
+
+  const handleChangeMentor = (mentee) => {
+    seteditMentee({
+      mentorID: "",
+      mentorName: "",
+      menteeId: mentee.id,
+    });
+    setcurrMentee(mentee);
+    setshowChangeMentor(true);
+  };
+
+  const editMentor = async () => {
+    axios
+      .post(
+        "http://127.0.0.1:8000/editMenteeById/",
+        JSON.stringify({
+          id: editMentee.menteeId,
+          mentorId: editMentee.mentorId,
+          department: currMentee.department,
+        })
+      )
+      .then((response) => {
+        if (response.status === 200) {
+          alert(response.data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Error changing Mentor", error);
+      });
+  };
+
+  const handleSaveChangeMentor = () => {
+    editMentor();
+    setshowChangeMentor(false);
+    fetchMenteeList();
+  };
+
+  const handleCloseChangeMentor = () => {
+    setshowChangeMentor(false);
+  };
+
   const addMenteeOnBackend = async (mentee) => {
     try {
       await axios
@@ -102,14 +134,15 @@ const MenteesList = () => {
               department: "",
               email: "",
               mentorId: "",
+              contact: "",
             });
             setAddMenteeModalVisible(false);
             setMentees((prevMentees) => [...prevMentees, mentee]); // Add the new mentee to the mentees list
-            console.log("Mentee added successfully on the backend");
+            alert("Mentee added successfully");
           }
         });
     } catch (error) {
-      console.error("Error updating meeting on the backend:", error);
+      console.error("Error updating", error);
       // Handle errors or display an error message to the user.
     }
   };
@@ -155,7 +188,8 @@ const MenteesList = () => {
       !menteeForm.id || // Check if roll number is empty
       !menteeForm.department || // Check if department is empty
       !menteeForm.email || // Check if email is empty
-      !menteeForm.mentorId // Check if mentor id is empty
+      !menteeForm.mentorId || // Check if mentor id is empty
+      !menteeForm.contact
     ) {
       // You can display an error message or handle validation as needed
       console.error("Please fill in all required fields.");
@@ -166,7 +200,6 @@ const MenteesList = () => {
   };
 
   const handleOpenUploadCSV = () => {
-    // console.log("here")
     setmenteeUploadCSV(true);
   };
 
@@ -174,30 +207,72 @@ const MenteesList = () => {
     setmenteeUploadCSV(false);
   };
 
+  
+
+  const filteredMentees = mentees.filter((mentee) => {
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    const lowerName = mentee.name.toLowerCase();
+    const lowerId = mentee.id.toLowerCase();
+    const departmentLabel = departmentOptions[mentee.department] || "";
+    const lowerDepartment = departmentLabel.toLowerCase();
+
+    // Apply department filter
+    const isDepartmentFiltered =
+      !selectedDepartmentFilter ||
+      mentee.department === selectedDepartmentFilter;
+
+    return (
+      isDepartmentFiltered &&
+      (lowerName.includes(lowerSearchTerm) ||
+        lowerId.includes(lowerSearchTerm) ||
+        lowerDepartment.includes(lowerSearchTerm))
+    );
+  });
+  useEffect(() => {
+    // Update filtered total entries when filteredMentors change
+    setTotalEntries(filteredMentees.length);
+  }, [filteredMentees]);
+
   return (
     <div>
       <Navbar className="fixed-top" userDetails={userDetails} />
       <div className="container">
         <div className="text-center my-3">
           <h4>Mentees List</h4>
+          <p>Total Entries: {totalEntries}</p>
         </div>
         <div className="input-group my-3">
+          {/* Search Mentees input */}
           <input
             type="text"
-            className="form-control mx-2"
+            className="form-control"
             placeholder="Search Mentees"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+
+          {/* Department filter dropdown */}
           <div className="input-group-append mx-2">
-            <button className="btn btn-outline-secondary" type="button">
-              Search
-            </button>
+            <select
+              className="form-control"
+              value={selectedDepartmentFilter}
+              onChange={(e) => setSelectedDepartmentFilter(e.target.value)}
+            >
+              <option value="">All Departments</option>
+              {Object.keys(departmentOptions).map((department) => (
+                <option key={department} value={department}>
+                  {departmentOptions[department]}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <button
           className="btn btn-primary mx-2"
           onClick={() => setAddMenteeModalVisible(true)}
+          data-toggle="tooltip"
+          data-placement="bottom"
+          title="Add new mentee"
         >
           Add Mentee
         </button>
@@ -258,6 +333,21 @@ const MenteesList = () => {
                       value={menteeForm.email}
                       onChange={(e) =>
                         setMenteeForm({ ...menteeForm, email: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Contact *</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={menteeForm.contact}
+                      onChange={(e) =>
+                        setMenteeForm({
+                          ...menteeForm,
+                          contact: e.target.value,
+                        })
                       }
                       required
                     />
@@ -328,87 +418,61 @@ const MenteesList = () => {
           </div>
         </div>
 
-        <button className="btn btn-primary mx-2" onClick={handleOpenUploadCSV}>
-          Upload CSV
+        <button
+          className="btn btn-primary mx-2"
+          onClick={handleOpenUploadCSV}
+          data-toggle="tooltip"
+          data-placement="bottom"
+          title="Upload a new CSV file to replace the current list."
+        >
+          Upload New CSV
         </button>
-
-        <div className="table-container text-left">
-          <div className="table-headers">
-            <table className="table mt-4 mx-2" border="1">
-              <thead>
+        <DownloadCSV ></DownloadCSV>
+        <div
+          className="table-container text-center my-2"
+          style={{ overflow: "auto", maxHeight: "400px" }}
+        >
+          <div className="table-body">
+            <table
+              className="table table-bordered table-hover mb-4 mx-2"
+              border="1"
+            >
+              <thead
+                style={{
+                  position: "sticky",
+                  top: "0",
+                  backgroundColor: "white",
+                  zIndex: "1",
+                }}
+              >
                 <tr>
                   {headerColumns.map((column) => (
-                    <th
-                      key={column.key}
-                      style={{ width: headerColumnWidths[column.key] }}
-                    >
-                      {column.label}
-                    </th>
+                    <th key={column.key}>{column.label}</th>
                   ))}
                 </tr>
               </thead>
-            </table>
-          </div>
-          <div
-            className="table-body"
-            style={{ maxHeight: "250px", overflowY: "scroll" }}
-          >
-            <table className="table table-hover mb-4 mx-2" border="1">
               <tbody>
-                {mentees
-                  .filter((mentee) => {
-                    const lowerSearchTerm = searchTerm.toLowerCase();
-                    const lowerName = mentee.name.toLowerCase();
-                    const lowerId = mentee.id.toLowerCase();
-                    const departmentLabel =
-                      departmentOptions[mentee.department] || "";
-                    const lowerDepartment = departmentLabel.toLowerCase();
-                    return (
-                      lowerName.includes(lowerSearchTerm) ||
-                      lowerId.includes(lowerSearchTerm) ||
-                      lowerDepartment.includes(lowerSearchTerm)
-                    );
-                  })
-                  .map((mentee) => (
-                    <tr
-                      className=""
-                      key={mentee.id}
-                      // onClick={() => openMenteeProfile(mentee)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <td
-                        style={{
-                          width: headerColumnWidths["name"],
-                        }}
+                {filteredMentees.map((mentee) => (
+                  <tr
+                    className=""
+                    key={mentee.id}
+                    // onClick={() => openMenteeProfile(mentee)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <td>
+                      <button
+                        className="btn btn-link"
+                        onClick={() => openMenteeProfile(mentee)}
                       >
+                        {mentee.name}
+                      </button>
+                    </td>
+                    <td>{mentee.id}</td>
+                    <td>{departmentOptions[mentee.department]}</td>
+                    <td>
+                      <div className="d-flex">
                         <button
-                          className="btn btn-link"
-                          onClick={() => openMenteeProfile(mentee)}
-                        >
-                          {mentee.name}
-                        </button>
-                      </td>
-                      <td
-                        style={{
-                          width: headerColumnWidths["id"],
-                        }}
-                      >
-                        {mentee.id}
-                      </td>
-                      <td
-                        style={{
-                          width: headerColumnWidths["department"],
-                        }}
-                      >
-                        {departmentOptions[mentee.department]}
-                      </td>
-                      <td
-                        style={{
-                          width: headerColumnWidths["actions"],
-                        }}
-                      >
-                        <button
-                          className="btn btn-sm"
+                          className="btn btn-sm mr-2"
                           onClick={() => handleDeleteConfirmation(mentee)}
                         >
                           <img
@@ -417,9 +481,16 @@ const MenteesList = () => {
                             style={{ width: "20px", height: "20px" }}
                           />
                         </button>
-                      </td>
-                    </tr>
-                  ))}
+                        <button
+                          className="btn btn-sm btn-outline-dark ml-4"
+                          onClick={() => handleChangeMentor(mentee)}
+                        >
+                          Change Mentor
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
             {/* Mentee Profile Popup */}
@@ -493,6 +564,16 @@ const MenteesList = () => {
             closeModal={handleCloseUploadCSV}
             fetchMenteeList={fetchMenteeList}
             // onUpload = {onIpload}
+          />
+        )}
+
+        {showChangeMentor && (
+          <ChangeMentor
+            handleSave={handleSaveChangeMentor}
+            handleClose={handleCloseChangeMentor}
+            editMentee={editMentee}
+            seteditMentee={seteditMentee}
+            currMentee={currMentee}
           />
         )}
       </div>

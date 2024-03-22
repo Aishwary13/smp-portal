@@ -9,6 +9,7 @@ class Candidate(models.Model):
     department = models.CharField()
     year = models.CharField()
     status = models.IntegerField()
+    contact = models.CharField()
     """
     1 - Form filled 
     2 - mentor selected and consent form mail send 
@@ -32,6 +33,7 @@ class Mentee(models.Model):
     email = models.CharField()
     name = models.CharField()
     department = models.CharField()
+    contact = models.CharField()
     imgSrc = models.TextField()
     mentorId = models.CharField() # id of the mentor
 
@@ -41,20 +43,6 @@ class Mentee(models.Model):
     class Meta:
         app_label = 'server'
 
-class Mentor(models.Model):
-    id = models.CharField(primary_key=True)
-    goodiesStatus = models.IntegerField()
-    """
-    0 - not collected 
-    1 - collected 
-    """
-    reimbursement = models.IntegerField()
-
-    def __str__(self):
-        return self.id
-    
-    class Meta:
-        app_label = 'server'
 
 class Admin(models.Model):
     id = models.CharField(primary_key=True)
@@ -78,6 +66,9 @@ class Meetings(models.Model):
     date = models.CharField(max_length=255)
     time = models.CharField(max_length=255)
     attendee = models.IntegerField()
+    mentorBranches = models.JSONField(default=list)
+    menteeBranches = models.JSONField(default=list)
+    menteeList = models.JSONField(default=list)
     """
     1: mentor 
     2: mentee
@@ -86,28 +77,53 @@ class Meetings(models.Model):
     description = models.TextField()
 
     def __str__(self):
-        return str(self.meeting_id)
+        return str(self.meetingId)
     
     class Meta:
         app_label = 'server'
 
 class Attendance(models.Model):
-    attendeeId = models.CharField(primary_key=True)
-    meeting = models.JSONField(null=True)
+    id = models.AutoField(primary_key=True)
+    attendeeId = models.CharField()
+    meetingId = models.JSONField(null=True)
 
     def __str__(self):
-        return self.attendee_id
+        return self.id
     
     class Meta:
         app_label = 'server'
 
 class FormResponses(models.Model):
-    formId = models.CharField(primary_key=True)
+    SubmissionId = models.AutoField(primary_key=True)
     submitterId = models.CharField()
+    FormType =  models.CharField()
+    """
+    1: mentor enrollment 
+    2: mentor consent 
+    3: mentee feedback 
+    """
     responses = models.JSONField(null=True)
 
     def __str__(self):
-        return self.form_id
+        return self.SubmissionId
+    
+    class Meta:
+        app_label = 'server'
+
+class FormStatus(models.Model):
+    formId = models.CharField(primary_key=True)
+    """
+    1: mentor enrollment 
+    2: mentor consent 
+    3: mentee feedback 
+    """
+    formStatus = models.CharField()
+    """
+    0 : off 
+    1 : on"""
+
+    def __str__(self):
+        return self.formId
     
     class Meta:
         app_label = 'server'

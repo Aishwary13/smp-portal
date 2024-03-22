@@ -1,6 +1,8 @@
 import React from 'react'
+import departmentOptions from "../../../../data/departmentOptions.json";
+// import menteeDepartments from "../../../../data/menteeDepartments.json";
 
-export default function Formelement({currmeeting, handletitle,handledate, handletime,handleattendees,handleDescription,formValid}) {
+export default function Formelement({currmeeting, handletitle,handledate, handletime,handleattendees,handleDescription,formValid,handleBranch,handleAllBranchesChange}) {
 
   const handleButtonClick = (e) => {
     e.stopPropagation();
@@ -38,12 +40,94 @@ export default function Formelement({currmeeting, handletitle,handledate, handle
                     Mentors
                   </label>
                 </div>
+
+                {currmeeting.attendee.includes('Mentors') && (
+                  <div className="form-group">
+                    <label>Mentor Branches</label>
+
+                    <div>
+
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          value="allMentorBranches"
+                          id="allMentorBranchesCheck"
+                          checked={currmeeting.mentorBranches.length === Object.keys(departmentOptions).length}
+                          onChange={(event) => handleAllBranchesChange(event,"Mentor")}
+                        />
+                        <label className="form-check-label" htmlFor="allMentorBranchesCheck">
+                          All Branches
+                        </label>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                      {Object.entries(departmentOptions).map(([key, label]) => (
+                        <div key={key} className="form-check mx-3">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            value={key}
+                            id={`${key}Check`}
+                            checked={currmeeting.mentorBranches.includes(key)}
+                            onChange={(event) => handleBranch(event,"Mentor")}
+                          />
+                          <label className="form-check-label" htmlFor={`${key}Check`}>
+                            {label}
+                          </label>
+                        </div>
+                      ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="form-check">
                   <input className="form-check-input" onChange={handleattendees} checked = {currmeeting.attendee.includes('Mentees')} type="checkbox" value="Mentees" id="menteeCheck" />
                   <label className="form-check-label" htmlFor="menteeCheck">
                     Mentees
                   </label>
                 </div>
+                
+                {currmeeting.attendee.includes('Mentees') && (
+                  <div className="form-group">
+                    <label>Mentee Branches</label>
+
+                    <div>
+
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          value="allMenteeBranches"
+                          id="allMenteeBranchesCheck"
+                          checked={currmeeting.menteeBranches.length === Object.keys(departmentOptions).length}
+                          onChange={(event) => handleAllBranchesChange(event,"Mentee")}
+                        />
+                        <label className="form-check-label" htmlFor="allMenteeBranchesCheck">
+                          All Branches
+                        </label>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                      {Object.entries(departmentOptions).map(([key, label]) => (
+                        <div key={key} className="form-check mx-3">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            value={key}
+                            id={`${key}MenteeCheck`}
+                            checked={currmeeting.menteeBranches.includes(key)}
+                            onChange={(event) => handleBranch(event,"Mentee")}
+                          />
+                          <label className="form-check-label" htmlFor={`${key}MenteeCheck`}>
+                            {label}
+                          </label>
+                        </div>
+                      ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
             </div>
           </div>

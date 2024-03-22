@@ -4,18 +4,10 @@ function UserDetails(props) {
   const {
     inputValues,
     handleChange,
-    handleImageChange,
-    prevStep,
     nextStep,
-    sizeOptions,
     yearOptions,
     departmentOptions,
   } = props;
-
-  const back = (e) => {
-    e.preventDefault();
-    prevStep();
-  };
 
   const saveAndcontinue = (e) => {
     e.preventDefault();
@@ -27,25 +19,52 @@ function UserDetails(props) {
       inputValues.email === "" ||
       inputValues.department === "" ||
       inputValues.year === "" ||
-      inputValues.size === "" ||
-      inputValues.imgSrc === ""
+      inputValues.contact === ""
     ) {
       alert("Please fill in all required fields.");
+      return;
+    }
+
+    // Check if the name is valid (no numbers or special characters)
+    const nameRegex = /^[a-zA-Z\s]+$/; // Allow only letters
+    if (!nameRegex.test(inputValues.name)) {
+      alert("Please enter a valid name without numbers or special characters.");
+      return;
+    }
+
+    // Modify the name to the desired format
+    const formattedName = inputValues.name
+      .toLowerCase() // Convert to lowercase
+      .replace(/\s+/g, " ") // Replace multiple spaces with a single space
+      .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize the first letter of each word
+
+    inputValues.name = formattedName;
+
+    if (
+      isNaN(Number(inputValues.contact)) ||
+      inputValues.contact.length !== 10
+    ) {
+      alert("Please enter a valid 10-digit contact number.");
       return;
     }
 
     // Proceed to the next step
     nextStep();
   };
-  
-
 
   return (
     <div className="container">
       <form>
+        <h1 className="text-center mb-4">B.Tech Student Mentor Enrollment</h1>
+        <p className="text-left">
+          Dear Students,
+          <br />
+          You're requested to fill out this form carefully. There are 6 Multiple choice questions in this, and you're suggested to read them properly and answer based on your own thought process.
+        </p>
+
         <div className="mb-3">
           <label className="form-label" htmlFor="formName">
-            Full Name
+            Full Name (as per records)
           </label>
           <input
             type="text"
@@ -80,30 +99,9 @@ function UserDetails(props) {
             className="form-control"
             defaultValue={inputValues.email}
             name="email"
-            required // Make the input required
-            // disabled // Disable the input
+            disabled
             onChange={handleChange}
           />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Department</label>
-          <select
-            className="form-select"
-            name="department"
-            value={inputValues.department}
-            required // Make the select required
-            onChange={handleChange}
-          >
-            <option value="" disabled>
-              Select Department
-            </option>
-            {Object.entries(departmentOptions).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
         </div>
 
         <div className="mb-3">
@@ -127,36 +125,42 @@ function UserDetails(props) {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Size</label>
+          <label className="form-label">Department</label>
           <select
             className="form-select"
-            name="size"
-            value={inputValues.size}
+            name="department"
+            value={inputValues.department}
             required // Make the select required
             onChange={handleChange}
+            disabled={!inputValues.year} // Disable if year not selected
           >
             <option value="" disabled>
-              Select Size
+              Select Department
             </option>
-            {Object.entries(sizeOptions).map(([value, label]) => (
+            {Object.entries(departmentOptions).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
             ))}
           </select>
         </div>
-        <div className="mb-3">
-          <label className="form-label">Passport-size Photo</label>
-          <input
-            type="file"
-            className="form-control"
-            name="imgSrc"
-            accept="image/*" // Allow only image files
-            required // Make the input required
-            onChange={handleImageChange} // Handle image selection
-          />
-        </div>
 
+        <div className="mb-3">
+          <label className="form-label" htmlFor="formContact">
+            Contact Number
+          </label>
+          <div className="input-group">
+            <span className="input-group-text">+91</span>
+            <input
+              type="text"
+              className="form-control"
+              defaultValue={inputValues.contact}
+              name="contact"
+              required // Make the input required
+              onChange={handleChange}
+            />
+          </div>
+        </div>
         <button className="btn btn-primary mb-5" onClick={saveAndcontinue}>
           Next
         </button>
